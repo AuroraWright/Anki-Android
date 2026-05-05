@@ -27,6 +27,7 @@ import androidx.core.app.TaskStackBuilder
 import androidx.core.content.FileProvider
 import androidx.core.content.IntentCompat
 import androidx.work.WorkManager
+import anki.sync.syncAuth
 import com.ichi2.anki.common.annotations.NeedsTest
 import com.ichi2.anki.common.coroutines.applicationScope
 import com.ichi2.anki.common.utils.trimToLength
@@ -443,7 +444,10 @@ class IntentHandler : AbstractIntentHandler() {
                 val millisecondsSinceLastSync = millisecondsSinceLastSync()
                 val limited = millisecondsSinceLastSync < INTENT_SYNC_MIN_INTERVAL
                 if (!limited && !hkey.isNullOrEmpty() && NetworkUtils.isOnline) {
-                    deckPicker.sync()
+                    val auth = syncAuth()
+                    if (auth != null) {
+                        SyncWorker.start(deckPicker, auth, shouldFetchMedia())
+                    }
                 } else {
                     val err = res.getString(R.string.sync_error)
                     if (limited) {
